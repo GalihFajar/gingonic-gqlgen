@@ -5,36 +5,31 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"graphql_todos/Config"
 	"graphql_todos/graph/generated"
 	"graphql_todos/graph/model"
-	"graphql_todos/utils"
-	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
-	var user model.User
-	user.Name = input.Name
-	user.Address = input.Address
-	user.Email = input.Email
-	user.Phone = input.Phone
+	user  := model.User{
+		Name: input.Name,
+		Address: input.Address,
+		Email: input.Email,
+		Phone: input.Phone,
+	}
 	err := Config.DB.Create(&user).Error
-	returnedUser := &user
-	return returnedUser, err
+	return &user, err
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	var user []*model.User
-	err := Config.DB.Find(user).Error
-	gc, cerr := utils.GinContextFromContext(ctx)
-	if err != nil || cerr != nil {
-		fmt.Println(err.Error())
-		gc.AbortWithStatus(http.StatusNotFound)
-	} else {
-		gc.JSON(http.StatusOK, user)
+	var temp []model.User
+	err := Config.DB.Find(&temp).Error
+	for i := range temp{
+		tempPointer := &temp[i]
+		user = append(user, tempPointer)
 	}
 	return user, err
 }
